@@ -1,0 +1,103 @@
+<!doctype html>
+<html>
+<head>
+    <title>NHL Standings</title>
+    <!-- Add DataTables CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        h2 {
+            background-color: #333;
+            color: #fff;
+            padding: 5px 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #fff;
+            border: 1px solid #ccc;
+        }
+
+        table th, table td {
+            padding: 10px;
+            text-align: center;
+        }
+
+        table th {
+            background-color: #333;
+            color: #fff;
+        }
+
+        .center-table {
+            margin: 0 auto;
+        }
+
+    </style>
+</head>
+<body>
+    <h1>NHL Standings</h1>
+    {% for division, table in division_data.items() %}
+    <h2>{{ division }}</h2>
+    <!-- Add class="data-table" to enable DataTables for this table -->
+    <table class="table center-table data-table">
+        {{ table | safe }}
+    </table>
+    {% endfor %}
+
+    <div class="notes">
+        <p>xP = Expected Points</p>
+        <p>xW = Expected Wins</p>
+        <p>xvrP = "Expectation vs. Reality Points: How many points a team actually has minus what they are expected to have</p>
+        <p>xvrW = "Expectation vs. Reality Wins: How many wins a team actually has minus how many wins they are expected to have</p>
+    </div>
+
+    <!-- Add DataTables JavaScript -->
+    <script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+
+    <!-- Initialize DataTables for all tables with the class "data-table" -->
+    <script>
+        $(document).ready(function() {
+            var table = $('.data-table').DataTable();
+
+            // Apply background color to xvrP and xvrW cells
+            table.cells('.xvrP').every(function () {
+                var cell = this.node();
+                var value = parseFloat(this.data());
+                var scale = (value - min_xvrP) / (max_xvrP - min_xvrP);
+                var color = getColorForValue(scale);
+                cell.style.backgroundColor = color;
+                cell.style.color = 'white';
+            });
+
+            table.cells('.xvrW').every(function () {
+                var cell = this.node();
+                var value = parseFloat(this.data());
+                var scale = (value - min_xvrW) / (max_xvrW - min_xvrW);
+                var color = getColorForValue(scale);
+                cell.style.backgroundColor = color;
+                cell.style.color = 'white';
+            });
+
+            // Function to get color based on scale
+            function getColorForValue(scale) {
+                var r = Math.floor(255 - (255 * scale));
+                var b = Math.floor(255 * scale);
+                var g = 0;
+                return 'rgb(' + r + ',' + g + ',' + b + ')';
+            }
+        });
+    </script>
+</body>
+</html>
