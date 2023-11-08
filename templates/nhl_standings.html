@@ -1,104 +1,108 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
 <head>
     <title>NHL Standings</title>
-    <!-- Add DataTables CSS -->
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
-            margin: 20px;
+            background-color: #f2f2f2;
+            padding: 20px;
         }
 
         h1 {
             text-align: center;
-            color: #333;
         }
 
-        h2 {
-            background-color: #333;
-            color: #fff;
-            padding: 5px 10px;
+        .conference {
+            background-color: #0077b6;
+            color: white;
+            padding: 10px;
+            margin: 10px 0;
+            text-align: center; /* Center conference header */
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            background-color: #fff;
-            border: 1px solid #ccc;
+            margin-bottom: 20px;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        table th, table td {
-            padding: 10px;
-            text-align: center;
+        th, td {
+            text-align: center; /* Center text in columns and headers */
+            padding: 12px 15px;
         }
 
-        table th {
-            background-color: #333;
-            color: #fff;
+        th {
+            background-color: #f2f2f2;
         }
 
-        .center-table {
-            margin: 0 auto;
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
         }
 
+        .division-header {
+            background-color: #d3d3d3;
+            font-weight: bold;
+        }
     </style>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
 </head>
 <body>
     <h1>NHL Standings</h1>
-    {% for division, table in division_data.items() %}
-    <h2>{{ division }}</h2>
-    <!-- Add class="data-table" to enable DataTables for this table -->
-    <table class="table center-table data-table">
-        {{ table | safe }}
+    {% for conference, divisions in team_data.items() %}
+    <div class="conference">{{ conference }}</div>
+    {% for division, teams in divisions.items() %}
+    <h2 class="division-header">{{ division }}</h2>
+    <table id="nhl-standings">
+        <thead>
+            <tr>
+                <th>Team Name</th>
+                <th>Games Played</th>
+                <th>Wins</th>
+                <th>Losses</th>
+                <th>OT Losses</th>
+                <th>Points</th>
+                <th>Points Percentage</th>
+                <th>Win Percentage</th>
+                <th>Pythag</th>
+                <th>xP</th>
+                <th>xW</th>
+                <th>xvrP</th>
+                <th>xvrW</th>
+                <th>Pace</th>
+                <th>xTP</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for team in teams %}
+            <tr>
+                <td>{{ team['Team Name'] }}</td>
+                <td>{{ team['Games Played'] }}</td>
+                <td>{{ team['Wins'] }}</td>
+                <td>{{ team['Losses'] }}</td>
+                <td>{{ team['OT Losses'] }}</td>
+                <td>{{ team['Points'] }}</td>
+                <td>{{ team['Points Percentage'] }}</td>
+                <td>{{ team['Win Percentage'] }}</td>
+                <td>{{ team['Pythag'] }}</td>
+                <td>{{ team['xP'] }}</td>
+                <td>{{ team['xW'] }}</td>
+                <td>{{ team['xvrP'] }}</td>
+                <td>{{ team['xvrW'] }}</td>
+                <td>{{ team['Pace'] }}</td>
+                <td>{{ team['xTP'] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
     </table>
     {% endfor %}
-
-    <div class="notes">
-        <p>xP = Expected Points</p>
-        <p>xW = Expected Wins</p>
-        <p>xvrP = "Expectation vs. Reality Points": How many points a team actually has minus what they are expected to have</p>
-        <p>xvrW = "Expectation vs. Reality Wins": How many wins a team actually has minus how many wins they are expected to have</p>
-        <p>Pace = Current point total pace based on Point Percentage</p>
-        <p>xTP = Expected Total Points. A team's expected season point total using their pythag output</p>
-    </div>
-
-    <!-- Add DataTables JavaScript -->
-    <script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
-
-    <!-- Initialize DataTables for all tables with the class "data-table" -->
+    {% endfor %}
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
     <script>
-        $(document).ready(function() {
-            var table = $('.data-table').DataTable();
-
-            // Apply background color to xvrP and xvrW cells
-            table.cells('.xvrP').every(function () {
-                var cell = this.node();
-                var value = parseFloat(this.data());
-                var scale = (value - min_xvrP) / (max_xvrP - min_xvrP);
-                var color = getColorForValue(scale);
-                cell.style.backgroundColor = color;
-                cell.style.color = 'white';
-            });
-
-            table.cells('.xvrW').every(function () {
-                var cell = this.node();
-                var value = parseFloat(this.data());
-                var scale = (value - min_xvrW) / (max_xvrW - min_xvrW);
-                var color = getColorForValue(scale);
-                cell.style.backgroundColor = color;
-                cell.style.color = 'white';
-            });
-
-            // Function to get color based on scale
-            function getColorForValue(scale) {
-                var r = Math.floor(255 - (255 * scale));
-                var b = Math.floor(255 * scale);
-                var g = 0;
-                return 'rgb(' + r + ',' + g + ',' + b + ')';
-            }
+        $(document).ready( function () {
+            $('#nhl-standings').DataTable();
         });
     </script>
 </body>
