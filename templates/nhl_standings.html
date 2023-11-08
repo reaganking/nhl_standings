@@ -35,7 +35,12 @@
         }
 
         th {
-            background-color: #f2f2f2;
+            font-weight: bold; /* Increase font weight for headers */
+            background-color: #f5f5f5; /* Change background color for headers */
+        }
+
+        th:hover {
+            background-color: #e0e0e0; /* Change background color on hover for headers */
         }
 
         tr:nth-child(even) {
@@ -45,6 +50,25 @@
         .division-header {
             background-color: #d3d3d3;
             font-weight: bold;
+        }
+
+        /* Responsive design for web (screens wider than 768px) */
+        @media (min-width: 769px) {
+            table {
+                font-size: 16px; /* Adjust font size for web */
+            }
+        }
+
+        /* Responsive design for mobile (screens up to 768px) */
+        @media (max-width: 768px) {
+            table {
+                font-size: 14px; /* Adjust font size for mobile devices */
+                padding: 8px; /* Reduce padding for mobile devices */
+            }
+
+            th, td {
+                padding: 8px; /* Reduce cell padding for mobile devices */
+            }
         }
     </style>
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
