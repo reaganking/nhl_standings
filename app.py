@@ -1,71 +1,71 @@
-import requests
-import pandas as pd
 from flask import Flask, render_template
-import numpy as np
+import requests
 
 app = Flask(__name__)
 
-# Function to fetch and process NHL standings data
-def fetch_and_process_standings():
-    # Send a GET request to the NHL standings API
-    url = 'https://statsapi.web.nhl.com/api/v1/standings'
-    response = requests.get(url)
-    data = response.json()
-
-    # Extract the relevant data for each division
-    divisions = data['records']
-
-    division_data = {}
-
-    xvrP_values = []
-    xvrW_values = []
-
-    for division in divisions:
-        division_name = division['division']['name']
-
-        table_data = []
-
-        for team in division['teamRecords']:
-            xvrP = round(team['points'] - ((team['gamesPlayed']) * 2) * (team['goalsScored'] ** 2.19) / ((team['goalsScored'] ** 2.19) + (team['goalsAgainst'] ** 2.19)), 2)
-            xvrW = round(team['leagueRecord']['wins'] - (team['gamesPlayed']) * (team['goalsScored'] ** 2.19) / ((team['goalsScored'] ** 2.19) + (team['goalsAgainst'] ** 2.19)), 2)
-            xvrP_values.append(xvrP)
-            xvrW_values.append(xvrW)
-
-            team_info = {
-                'Name': team['team']['name'],
-                'Games Played': team['gamesPlayed'],
-                'Wins': team['leagueRecord']['wins'],
-                'Losses': team['leagueRecord']['losses'],
-                'Overtime': team['leagueRecord']['ot'],
-                'Points': team['points'],
-                'Point Percentage': round(team['points'] / ((team['leagueRecord']['wins'] + team['leagueRecord']['losses'] + team['leagueRecord']['ot']) * 2), 3),
-                'Win Percentage': round(team['leagueRecord']['wins'] / (team['leagueRecord']['wins'] + team['leagueRecord']['losses'] + team['leagueRecord']['ot']), 3),
-                'Pythag': round((team['goalsScored'] ** 2.19) / ((team['goalsScored'] ** 2.19) + (team['goalsAgainst'] ** 2.19)), 3),
-                'xP': round(((team['gamesPlayed']) * 2) * (team['goalsScored'] ** 2.19) / ((team['goalsScored'] ** 2.19) + (team['goalsAgainst'] ** 2.19)), 2),
-                'xW': round((team['gamesPlayed']) * (team['goalsScored'] ** 2.19) / ((team['goalsScored'] ** 2.19) + (team['goalsAgainst'] ** 2.19)), 2),
-                'xvrP': '+' + str(xvrP) if xvrP > 0 else str(xvrP),
-                'xvrW': '+' + str(xvrW) if xvrW > 0 else str(xvrW),
-                'Pace': int(164*(team['points'] / ((team['leagueRecord']['wins'] + team['leagueRecord']['losses'] + team['leagueRecord']['ot']) * 2))),
-                'xTP': int(164*(team['goalsScored'] ** 2.19) / ((team['goalsScored'] ** 2.19) + (team['goalsAgainst'] ** 2.19)))
-            }
-            table_data.append(team_info)
-
-        division_df = pd.DataFrame(table_data)
-        # Set index=False to remove the index column
-        division_data[division_name] = division_df.to_html(classes='table table-striped', escape=False, index=False)
-
-    max_xvrP = max(xvrP_values)
-    min_xvrP = min(xvrP_values)
-    max_xvrW = max(xvrW_values)
-    min_xvrW = min(xvrW_values)
-
-    return division_data, max_xvrP, min_xvrP, max_xvrW, min_xvrW
-
-# Route to display NHL standings
 @app.route('/')
 def display_standings():
-    division_data, max_xvrP, min_xvrP, max_xvrW, min_xvrW = fetch_and_process_standings()
-    return render_template('nhl_standings.html', division_data=division_data, max_value=max(max_xvrP, max_xvrW), min_value=min(min_xvrP, min_xvrW))
+    # API URL
+    url = "https://api-web.nhle.com/v1/standings/now"
+
+    # Send an HTTP GET request to the API
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        data = response.json()
+        
+        # Extract the relevant data from the response
+        standings = data.get('standings', [])
+        
+        # Create a nested dictionary to group the teams by conference and division
+        team_data = {}
+        
+        for team in standings:
+            conference_name = team.get('conferenceName', 'N/A')
+            division_name = team.get('divisionName', 'N/A')
+            team_name = team.get('teamName', {}).get('default', 'N/A')
+            games_played = team.get('gamesPlayed', 'N/A')
+            wins = team.get('wins', 'N/A')
+            losses = team.get('losses', 'N/A')
+            ot_losses = team.get('otLosses', 'N/A')
+            points = team.get('points', 'N/A')
+            point_percentage = round(team.get('points')/(team.get('gamesPlayed')*2),3)
+            win_percentage = round(team.get('winPctg'),3)
+            pythag = round((team.get('goalFor')**2.19)/((team.get('goalFor')**2.19)+(team.get('goalAgainst')**2.19)),3)
+            xP = round((team.get('gamesPlayed')*2)*pythag,2)
+            xW = round(team.get('gamesPlayed')*pythag,2)
+            xvrP = round(team.get('points') - xP,2)
+            xvrW = round(team.get('wins') - xW,2)
+            pace = int(point_percentage*164)
+            xTP = int(pythag*164)
+            
+            if conference_name not in team_data:
+                team_data[conference_name] = {}
+            
+            if division_name not in team_data[conference_name]:
+                team_data[conference_name][division_name] = []
+            
+            team_data[conference_name][division_name].append({
+                'Team Name': team_name,
+                'Games Played': games_played,
+                'Wins': wins,
+                'Losses': losses,
+                'OT Losses': ot_losses,
+                'Points': points,
+                'Points Percentage': point_percentage,
+                'Win Percentage': win_percentage,
+                'Pythag': pythag,
+                'xP': xP,
+                'xW': xW,
+                'xvrP': '+' + str(xvrP) if xvrP > 0 else str(xvrP),
+                'xvrW': '+' + str(xvrW) if xvrW > 0 else str(xvrW),
+                'Pace': pace,
+                'xTP': xTP
+            })
+
+        return render_template('nhl_standings.html', team_data=team_data)
+    else:
+        return f"Failed to fetch data. Status code: {response.status_code}"
 
 if __name__ == '__main__':
     app.run(debug=False)
