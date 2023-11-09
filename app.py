@@ -38,7 +38,8 @@ def display_standings():
             xvrW = round(team.get('wins') - xW,2)
             pace = int(point_percentage*164)
             xTP = int(pythag*164)
-            
+            l10pythag = round((team.get('l10GoalsFor')**2.19)/((team.get('l10GoalsFor')**2.19)+(team.get('l10GoalsAgainst')**2.19)),3)
+
             if conference_name not in team_data:
                 team_data[conference_name] = {}
             
@@ -60,7 +61,8 @@ def display_standings():
                 'xvrP': '+' + str(xvrP) if xvrP > 0 else str(xvrP),
                 'xvrW': '+' + str(xvrW) if xvrW > 0 else str(xvrW),
                 'Pace': pace,
-                'xTP': xTP
+                'xTP': xTP,
+                'L10 Pythag': l10pythag
             })
 
         return render_template('nhl_standings.html', team_data=team_data)
